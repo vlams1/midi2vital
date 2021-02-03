@@ -1,32 +1,51 @@
-import { Note } from "@tonejs/midi/dist/Note";
-import { Track } from "@tonejs/midi/dist/Track";
-import { Lfo } from "./schema";
+import { Lfo, Modulation } from "./schema";
 
-let notes = {'C':0,'D':2,'E':4,'F':5,'G':7,'A':9,'B':11}
-
-export function pitchToLFO(note: string) {
-  let pitch = parseInt(note.substr(note.length - 1), 10) * 12 + notes[note[0]];
-  if (note[1] == '#') pitch++;
-  return 1 - pitch / 12 / 8;
+export function createLfo(
+  start: number
+) {
+  const newLfo = {} as Lfo;
+  newLfo.name = "generated";
+  newLfo.points = [0,1,start,1];
+  newLfo.num_points = 2;
+  newLfo.powers = [];
+  return newLfo;
 }
 
-export function applyNote(
-  t: Track,
-  rhythmLFO: Lfo,
-  pitchLFO: Lfo,
+export function createModulation(
+  target: string,
+  lfo: Lfo,
+  end: number
+) {
+  lfo.points.push(end, 1);
+  lfo.num_points++;
+  const newMod = {} as Modulation;
+  newMod.source = "lfo_1";
+  newMod.destination = target;
+  newMod.line_mapping = lfo;
+  return newMod;
+}
+
+export function applyAmplitude(
+  lfo: Lfo,
   start: number,
   end: number,
-  name: string,
-  lastName: string
+  velocity: number
 ) {
-  rhythmLFO.points.push(start, 0.0);
-  rhythmLFO.points.push(end, 1.0);
-  const pitch = pitchToLFO(name);
-  console.log({pitch, name});
-  if (name === lastName)
-    pitchLFO.points[pitchLFO.points.length - 2] = end
-  else {
-    pitchLFO.points.push(start, pitch);
-    pitchLFO.points.push(end, pitch);
-  }
+  lfo.points.push(start, 1);
+  lfo.points.push(start, 1-velocity);
+  lfo.points.push(end, 1-velocity);
+  lfo.points.push(end, 1);
+  lfo.num_points += 4;
+}
+
+export function applyPitch(
+  lfo: Lfo,
+  start: number,
+  end: number,
+  note: number
+) {
+  note = 1 - note/96;
+  lfo.points.push(start, note);
+  lfo.points.push(end, note);
+  lfo.num_points += 2;
 }

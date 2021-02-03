@@ -1,24 +1,37 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-let notes = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
-function pitchToLFO(note) {
-    let pitch = parseInt(note.substr(note.length - 1), 10) * 12 + notes[note[0]];
-    if (note[1] == '#')
-        pitch++;
-    return 1 - pitch / 12 / 8;
+function createLfo(start) {
+    const newLfo = {};
+    newLfo.name = "generated";
+    newLfo.points = [0, 1, start, 1];
+    newLfo.num_points = 2;
+    newLfo.powers = [];
+    return newLfo;
 }
-exports.pitchToLFO = pitchToLFO;
-function applyNote(t, rhythmLFO, pitchLFO, start, end, name, lastName) {
-    rhythmLFO.points.push(start, 0.0);
-    rhythmLFO.points.push(end, 1.0);
-    const pitch = pitchToLFO(name);
-    console.log({ pitch, name });
-    if (name === lastName)
-        pitchLFO.points[pitchLFO.points.length - 2] = end;
-    else {
-        pitchLFO.points.push(start, pitch);
-        pitchLFO.points.push(end, pitch);
-    }
+exports.createLfo = createLfo;
+function createModulation(target, lfo, end) {
+    lfo.points.push(end, 1);
+    lfo.num_points++;
+    const newMod = {};
+    newMod.source = "lfo_1";
+    newMod.destination = target;
+    newMod.line_mapping = lfo;
+    return newMod;
 }
-exports.applyNote = applyNote;
+exports.createModulation = createModulation;
+function applyAmplitude(lfo, start, end, velocity) {
+    lfo.points.push(start, 1);
+    lfo.points.push(start, 1 - velocity);
+    lfo.points.push(end, 1 - velocity);
+    lfo.points.push(end, 1);
+    lfo.num_points += 4;
+}
+exports.applyAmplitude = applyAmplitude;
+function applyPitch(lfo, start, end, note) {
+    note = 1 - note / 96;
+    lfo.points.push(start, note);
+    lfo.points.push(end, note);
+    lfo.num_points += 2;
+}
+exports.applyPitch = applyPitch;
 //# sourceMappingURL=lfoRepr.js.map

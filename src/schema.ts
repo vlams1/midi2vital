@@ -1,3 +1,9 @@
+export interface Voice {
+	occupied: number;
+	pitchLfo: Lfo;
+	amplitudeLfo: Lfo;
+}
+
 export interface Lfo {
 	name: string;
 	num_points: number;
